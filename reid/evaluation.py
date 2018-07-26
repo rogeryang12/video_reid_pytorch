@@ -1,51 +1,6 @@
 import json
-import torch
 import numpy as np
 from sklearn import metrics
-
-#
-# def cal_cmc_aps(dists, query_pid, query_cam, gallery_pid, gallery_cam, log_file, cal_aps=True):
-#     """
-#     calculate cmc and aps
-#     :param dists:  the distance between query and gallery, shape: query_size * gallery_size
-#     :param query_pid:  query person ids, shape query_size
-#     :param query_cam:  query camera ids, shape query_size
-#     :param gallery_pid:  gallery person ids, shape gallery_size
-#     :param gallery_cam:  gallery camera ids, shape gallery_size
-#     :param cal_aps:  whether or not calculate aps
-#     :return:
-#     """
-#     query_size, gallery_size = dists.shape
-#     matches = query_pid[:, np.newaxis] == gallery_pid[np.newaxis, :]
-#     mask = np.logical_and(matches, query_cam[:, np.newaxis] == gallery_cam[np.newaxis, :])
-#     matches[mask] = False
-#
-#     aps = []
-#     cmc = np.zeros(gallery_size)
-#     for i in range(query_size):
-#         dists[i, mask[i]] = np.inf
-#         if cal_aps:
-#             scores = 1 / (1 + dists[i])
-#             p, r, _ = metrics.precision_recall_curve(matches[i], scores)
-#             ap = metrics.auc(r, p)
-#             if np.isnan(ap):
-#                 print('Encountered an AP of nan which usually means a person only appears once.')
-#                 continue
-#             aps.append(ap * 100)
-#         k = np.where(matches[i, np.argsort(dists[i])])[0][0]
-#         cmc[k:] += 1
-#     cmc = cmc / query_size * 100
-#     if cal_aps:
-#         mean_ap = np.array(aps).mean()
-#         print('rank1|rank5|rank10 : {:.2f}|{:.2f}|{:.2f}, mAP : {:.2f}'.format(
-#             cmc[0], cmc[4], cmc[9], mean_ap))
-#         with open(log_file, 'w') as f:
-#             json.dump({'CMC': list(cmc), 'mAP': mean_ap, 'aps': aps}, f)
-#     else:
-#         print('rank1|rank5|rank10 : {:.2f}|{:.2f}|{:.2f}'.format(
-#             cmc[0], cmc[4], cmc[9]))
-#         with open(log_file, 'w') as f:
-#             json.dump({'CMC': list(cmc)}, f)
 
 
 def cal_cmc_aps(feats, pids, cams, query, gallery, log_file, cal_aps=True, batch_size=10):

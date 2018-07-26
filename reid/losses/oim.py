@@ -35,7 +35,9 @@ def oim(inputs, targets, lut, momentum=0.5):
 
 
 class OIMLoss(nn.Module):
-
+    """
+    return loss and precision
+    """
     def __init__(self, num_features, num_classes, scalar=1.0, momentum=0.5,
                  weight=None, size_average=True):
         super(OIMLoss, self).__init__()

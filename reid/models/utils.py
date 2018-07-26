@@ -4,7 +4,9 @@ import torchvision
 
 
 class CNNBackbone(nn.Module):
-
+    """
+    Resnet50 or inception3 network
+    """
     def __init__(self, cnn='resnet50', ckpt=None, pool='avg', dropout=True):
         """
         cnn that return feature maps or feature vectors (global pooling)

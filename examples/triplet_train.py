@@ -30,7 +30,7 @@ def main():
     parser.add_argument('--gamma', default=0.1, type=float)
 
     parser.add_argument('--dataset', default='mars', choices=['ilids', 'mars'])
-    parser.add_argument('--image_root', default='/data1/lixz/mars')
+    parser.add_argument('--image_root', default='mars_root')
     parser.add_argument('--iters', default=30000, type=int)
     parser.add_argument('--save_iter', default=1000, type=int)
     parser.add_argument('--lr_decay_iter', default=10000, type=int)
@@ -38,7 +38,7 @@ def main():
     # parser.add_argument('--dataset', default='ilids', choices=['ilids', 'mars'])
     # parser.add_argument('--data_root', default='data')
     # parser.add_argument('--h5_file', default=None)
-    # parser.add_argument('--image_root', default='/data1/lixz/ilids')
+    # parser.add_argument('--image_root', default='ilids_root')
     # parser.add_argument('--pre_load', default=True)
     # parser.add_argument('--iters', default=2000, type=int)
     # parser.add_argument('--save_iter', default=100, type=int)

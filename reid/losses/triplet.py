@@ -5,7 +5,14 @@ import numpy as np
 
 
 class TripletLoss(nn.Module):
-    def __init__(self, margin, mode='hard'):
+    """
+    return loss and top1
+    """
+    def __init__(self, margin='soft', mode='hard'):
+        """
+        :param margin: 'soft' or float
+        :param mode: 'hard','uniform' or 'adaptive'
+        """
         super(TripletLoss, self).__init__()
         self.margin = margin
         self.mode = mode

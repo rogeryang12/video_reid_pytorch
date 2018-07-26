@@ -5,7 +5,7 @@ from .utils import CNNBackbone
 
 class CNN(nn.Module):
     """
-    CNN model return embedding or embedding and logits
+    CNN model return embedding (and logits).
     """
     def __init__(self, emb_dim=1024, num_classes=None, cnn='resnet50', ckpt=None):
         """

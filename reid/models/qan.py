@@ -5,7 +5,8 @@ from .utils import CNNBackbone
 
 class QAN(nn.Module):
     """
-    CNN model return embedding or embedding and logits
+    Train: QAN model returns embedding, video_embedding (and logits)
+    Test: QAN model returns embedding and quality
     """
     def __init__(self, emb_dim=1024, num_classes=None, cnn='resnet50', ckpt=None):
         """

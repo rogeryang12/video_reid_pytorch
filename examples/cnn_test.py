@@ -13,14 +13,14 @@ def main():
     parser = ArgumentParser(description='Evaluate a Reid network')
 
     parser.add_argument('--experiment_root', default='CNN')
-    # parser.add_argument('--dataset', default='mars', choices=['ilids', 'mars'])
-    # parser.add_argument('--image_root', default='/data1/lixz/mars')
-    parser.add_argument('--dataset', default='ilids', choices=['ilids', 'mars'])
-    parser.add_argument('--h5_file', default='data/test.h5')
-    parser.add_argument('--pre-load', default=True)
+    parser.add_argument('--dataset', default='mars', choices=['ilids', 'mars'])
+    parser.add_argument('--image_root', default='mars_root')
+    # parser.add_argument('--dataset', default='ilids', choices=['ilids', 'mars'])
+    # parser.add_argument('--h5_file', default='data/test.h5')
+    # parser.add_argument('--pre-load', default=True)
 
     parser.add_argument('--cnn', default='resnet50', choices=['inception3', 'resnet50'])
-    parser.add_argument('--checkpoint', default='model1000.pkl')
+    parser.add_argument('--checkpoint', default='model2000.pkl')
     parser.add_argument('--emb_dim', default=1024, type=int)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--num_workers', default=12, type=int)
@@ -61,8 +61,9 @@ def main():
     # feats = np.load(os.path.join(args.experiment_root, 'features.npy'))
     # feats = torch.from_numpy(feats).to(device)
     log_file = os.path.join(args.experiment_root, 'eval.json')
-    cal_aps = False if args.dataset == 'ilids' else True
-    cal_cmc_aps(feats, dataset.pids, dataset.cams, dataset.query, dataset.gallery, log_file, cal_aps)
+    cal_aps = True if args.dataset == 'mars' else False
+    batch_size = 10 if args.dataset == 'mars' else None
+    cal_cmc_aps(feats, dataset.pids, dataset.cams, dataset.query, dataset.gallery, log_file, cal_aps, batch_size)
 
 
 if __name__ == '__main__':

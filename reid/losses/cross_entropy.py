@@ -3,7 +3,9 @@ import torch.nn as nn
 
 
 class CrossEntropyLoss(nn.Module):
-
+    """
+    return loss and precision
+    """
     def __init__(self):
         super(CrossEntropyLoss, self).__init__()
         self.crossentropy = nn.CrossEntropyLoss()
