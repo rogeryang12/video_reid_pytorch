@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # video_reid_pytorch
 Add `reid` to your `PYTHONPATH`, and you can run examples in `examples` folder.
 
@@ -17,6 +16,4 @@ Here are some results on `MARS` and `iLIDS` datasets.
 |:----------------------------------------|:------|:------|:-------|
 | cross entropy                           | 45.82 | 74.77 | 83.89  |
 | cross entropy + adaptive weight triplet | 59.22 | 86.78 | 92.50  |
-=======
-# video_reid_pytorch
->>>>>>> 757466625c339d7da744ec2d89f52406a4d25594
+
