@@ -36,6 +36,10 @@ class TrainBase(Dataset):
             img = Image.open(img)
         return self.trans(img)
 
+    def transform_list(self, img_list):
+        imgs = [self.transform(img) for img in img_list]
+        return torch.stack(imgs)
+
 
 class TrainLabel(TrainBase):
     """
@@ -61,7 +65,10 @@ class TrainLabel(TrainBase):
 
 
 class TrainTIBatch(TrainBase):
-
+    """
+    track_tensor: track_num x image_num x c x h x w     track_num sequences each consists of image_num images
+    labels: track_num x image_num    person label of track_num x image_num images
+    """
     def __init__(self, track_num, image_num, **kwargs):
         super(TrainTIBatch, self).__init__(**kwargs)
         self.track_num = track_num
@@ -75,9 +82,7 @@ class TrainTIBatch(TrainBase):
     def __getitem__(self, item):
         pid = self.pids[item]
         tracks = random.sample(self.track_dataset[pid], self.track_num)
-        track_tensor = []
-        for track in tracks:
-            track_tensor.append(torch.stack([self.transform(img) for img in track]))
+        track_tensor = [self.transform_list(track) for track in tracks]
         track_tensor = torch.stack(track_tensor)
         return track_tensor, torch.LongTensor([[self.label_dict[pid]] * self.image_num] * self.track_num)
 
@@ -97,6 +102,40 @@ class TrainTIBatch(TrainBase):
             diff = self.track_num - len(pid_tracks)
             if diff > 0:
                 pid_tracks.extend(pid_tracks[i % len(pid_tracks)] for i in range(diff))
+
+
+class TrainPairImages(TrainTIBatch):
+    """
+    track_tensor: 2 x image_num x c x h x w     2 sequences each consists of image_num images
+    labels: 2 x image_num    person label of 2 x image_num images
+    same: True or False      whether 2 sequences are the same person
+    """
+
+    def __init__(self, image_num, neg_pos_ratio=1, **kwargs):
+        """
+        :param neg_pos_ratio: number of negative pairs and positive pairs ratio
+        """
+        super(TrainPairImages, self).__init__(2, image_num, **kwargs)
+        self.neg_pos_ratio = neg_pos_ratio
+
+    def __len__(self):
+        return len(self.pids) * (1 + self.neg_pos_ratio)
+
+    def __getitem__(self, item):
+        if item < len(self.pids):
+            pid1 = pid2 = pid = self.pids[item]
+            tracks = random.sample(self.track_dataset[pid], 2)
+            same = True
+        else:
+            pid1, pid2 = random.sample(self.pids, 2)
+            tracks = [random.choice(self.track_dataset[pid1]),
+                      random.choice(self.track_dataset[pid2])]
+            same = False
+
+        track_tensor = torch.stack([self.transform_list(tracks[0]), self.transform_list(tracks[1])])
+        labels = torch.LongTensor([[self.label_dict[pid1]] * self.image_num,
+                                   [self.label_dict[pid2]] * self.image_num])
+        return track_tensor, labels, same
 
 
 class TestBase(Dataset):
@@ -225,6 +264,4 @@ class TestImages(TestBase):
     #     self.gallery = np.array(self.gallery)
     #     self.pids = np.array(self.pids)
     #     self.cams = np.array(self.cams)
-
-
 
