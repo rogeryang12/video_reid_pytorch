@@ -278,4 +278,3 @@ class TestImages(TestBase):
     #     self.gallery = np.array(self.gallery)
     #     self.pids = np.array(self.pids)
     #     self.cams = np.array(self.cams)
-
