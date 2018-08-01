@@ -1,12 +1,12 @@
 import torch
 from torch import optim
-import torchvision.transforms as T
 from argparse import ArgumentParser
 
 from reid.models import QAN
 from reid.datasets import TrainTIBatch
 from reid.losses import CrossEntropyLoss, TripletLoss
 from reid.trainer import Trainer
+import reid.transforms as T
 
 
 def main():
@@ -29,6 +29,8 @@ def main():
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--gamma', default=0.1, type=float)
 
+    parser.add_argument('--of_root', default=None)
+
     parser.add_argument('--dataset', default='mars', choices=['ilids', 'mars'])
     parser.add_argument('--image_root', default='root_of_mars')
     parser.add_argument('--iters', default=30000, type=int)
@@ -45,8 +47,8 @@ def main():
     # parser.add_argument('--lr_decay_iter', default=1000, type=int)
 
     args = parser.parse_args()
-    import os
-    os.environ['CUDA_VISIBLE_DEVICES'] = '3,0'
+    # import os
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '3,0'
 
     transform = [T.Resize((288, 144)), T.RandomCrop((256, 128)), T.RandomHorizontalFlip()]
     dataset = TrainTIBatch(**vars(args), transform=transform)
