@@ -3,10 +3,10 @@ import torch
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms as T
 
 from .ilids import ILIDS
 from .mars import MARS
+from ..transforms import *
 
 
 _factory = {
@@ -17,28 +17,36 @@ _factory = {
 
 class TrainBase(Dataset):
 
-    def __init__(self, dataset='ilids', transform=None, h5_file=None, image_root=None, data_root='data',
-                 train_ratio=0.5, pre_load=True, **kwargs):
+    def __init__(self, dataset='ilids', transform=None, h5_file=None, image_root=None, of_root=None, pre_load=True,
+                 data_root='data', train_ratio=0.5, **kwargs):
         if dataset not in _factory.keys():
             raise NotImplementedError('`{}` dataset not supported yet'.format(dataset))
-        self.dataset = _factory[dataset](h5_file=h5_file, image_root=image_root, data_root=data_root,
-                                         train_ratio=train_ratio, pre_load=pre_load, training=True)
+        self.dataset = _factory[dataset](h5_file=h5_file, image_root=image_root, of_root=of_root, pre_load=pre_load,
+                                         data_root=data_root, train_ratio=train_ratio, training=True)
 
         self.pids = sorted(list(self.dataset.keys()))
         self.label_dict = {pid: label for label, pid in enumerate(self.pids)}
-        self.pre_load = dataset == 'ilids' and pre_load
+        self.image_root = image_root
+        self.of_root = of_root
 
-        trans = [T.ToTensor(), T.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
-        self.trans = T.Compose(transform + trans if transform is not None else trans)
+        trans = [ToTensor(), Normalize((0.485, 0.456, 0.406, 0.5, 0.5), (0.229, 0.224, 0.225, 0.5, 0.5))]
+        self.trans = Compose(transform + trans if transform is not None else trans)
 
-    def transform(self, img):
-        if not self.pre_load:
-            img = Image.open(img)
-        return self.trans(img)
+    def read_img(self, img):
+        if isinstance(img, str):
+            np_img = np.array(Image.open(img))
+            if self.of_root is not None:
+                of = np.array(Image.open(img.replace(self.image_root, self.of_root)))[:, :, :2]
+                np_img = np.concatenate([np_img, of], axis=-1)
+            return np_img
+        return img
 
-    def transform_list(self, img_list):
-        imgs = [self.transform(img) for img in img_list]
-        return torch.stack(imgs)
+    def transform(self, imgs):
+        if isinstance(imgs, list):
+            imgs = np.stack(self.read_img(img) for img in imgs)
+        else:
+            imgs = self.read_img(imgs)
+        return self.trans(imgs)
 
 
 class TrainLabel(TrainBase):
@@ -82,7 +90,7 @@ class TrainTIBatch(TrainBase):
     def __getitem__(self, item):
         pid = self.pids[item]
         tracks = random.sample(self.track_dataset[pid], self.track_num)
-        track_tensor = [self.transform_list(track) for track in tracks]
+        track_tensor = [self.transform(track) for track in tracks]
         track_tensor = torch.stack(track_tensor)
         return track_tensor, torch.LongTensor([[self.label_dict[pid]] * self.image_num] * self.track_num)
 
@@ -132,7 +140,7 @@ class TrainPairImages(TrainTIBatch):
                       random.choice(self.track_dataset[pid2])]
             same = False
 
-        track_tensor = torch.stack([self.transform_list(tracks[0]), self.transform_list(tracks[1])])
+        track_tensor = torch.stack([self.transform(tracks[0]), self.transform(tracks[1])])
         labels = torch.LongTensor([[self.label_dict[pid1]] * self.image_num,
                                    [self.label_dict[pid2]] * self.image_num])
         return track_tensor, labels, same
@@ -140,31 +148,37 @@ class TrainPairImages(TrainTIBatch):
 
 class TestBase(Dataset):
 
-    def __init__(self, dataset='ilids', h5_file=None, image_root=None, data_root='data',
-                 train_ratio=0.5, pre_load=True, resize=None, crop_size=None, flip=False, **kwargs):
+    def __init__(self, dataset='ilids', h5_file=None, image_root=None, of_root=None,
+                 resize=None, crop_size=None, flip=False, **kwargs):
         if dataset not in _factory.keys():
             raise NotImplementedError('`{}` dataset not supported yet'.format(dataset))
-        self.dataset = _factory[dataset](h5_file=h5_file, image_root=image_root, data_root=data_root,
-                                         train_ratio=train_ratio, pre_load=pre_load, training=False)
+        self.dataset = _factory[dataset](h5_file=h5_file, image_root=image_root, of_root=of_root, training=False)
 
-        self.pre_load = dataset == 'ilids' and pre_load
         self.resize = resize
         self.crop_size = crop_size
         self.flip = flip
-        self.totensor = T.Compose([T.ToTensor(),
-                                   T.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+        self.image_root = image_root
+        self.of_root = of_root
+
+        self.totensor = Compose([ToTensor(),
+                                 Normalize((0.485, 0.456, 0.406, 0.5, 0.5), (0.229, 0.224, 0.225, 0.5, 0.5))])
 
     def transform(self, img):
-        if not self.pre_load:
-            img = Image.open(img)
+        if isinstance(img, str):
+            np_img = np.array(Image.open(img))
+            if self.of_root is not None:
+                of = np.array(Image.open(img.replace(self.image_root, self.of_root)))[:, :, :2]
+                np_img = np.concatenate([np_img, of], axis=-1)
+            img = np_img
+
         if self.resize is not None:
-            img = T.Resize(self.resize)(img)
+            img = Resize(self.resize)(img)
         if self.crop_size is not None:
-            imgs = T.FiveCrop(self.crop_size)(img)
+            imgs = FiveCrop(self.crop_size)(img)
         else:
             imgs = [img]
         if self.flip:
-            imgs = [T.RandomHorizontalFlip(p=1)(img) for img in imgs] + list(imgs)
+            imgs = [RandomHorizontalFlip(p=1)(img) for img in imgs] + list(imgs)
         imgs = torch.stack([self.totensor(img) for img in imgs])
         return imgs
 
@@ -264,4 +278,3 @@ class TestImages(TestBase):
     #     self.gallery = np.array(self.gallery)
     #     self.pids = np.array(self.pids)
     #     self.cams = np.array(self.cams)
-

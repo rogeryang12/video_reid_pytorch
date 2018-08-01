@@ -13,11 +13,12 @@ def main():
     parser = ArgumentParser(description='Evaluate a Reid network')
 
     parser.add_argument('--experiment_root', default='CNN')
+    parser.add_argument('--of_root', default=None)
     parser.add_argument('--dataset', default='mars', choices=['ilids', 'mars'])
     parser.add_argument('--image_root', default='root_of_mars')
     # parser.add_argument('--dataset', default='ilids', choices=['ilids', 'mars'])
     # parser.add_argument('--h5_file', default='data/test.h5')
-    # parser.add_argument('--pre-load', default=True)
+    # parser.add_argument('--pre_load', default=True)
 
     parser.add_argument('--cnn', default='resnet50', choices=['inception3', 'resnet50'])
     parser.add_argument('--checkpoint', default='model2000.pkl')
